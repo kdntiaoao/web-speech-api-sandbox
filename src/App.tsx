@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import {
   Field,
   FieldDescription,
@@ -41,7 +41,7 @@ function App() {
     setVoice(value);
   };
 
-  const handleSpeak = (e: React.FormEvent) => {
+  const handleSpeak = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!text) {
@@ -87,7 +87,7 @@ function App() {
           clearTimeout(timerId);
           timerId = window.setTimeout(() => {
             setupVoices();
-          }, 1000);
+          }, 100);
         } else {
           console.log("no voices found");
         }

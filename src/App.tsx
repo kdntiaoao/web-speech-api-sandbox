@@ -22,7 +22,7 @@ function App() {
   const [text, setText] = useState("");
   const [rate, setRate] = useState(1);
   const [pitch, setPitch] = useState(1);
-  const [voice, setVoice] = useState<string | undefined>(undefined);
+  const [voice, setVoice] = useState<string>("");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +38,9 @@ function App() {
   };
 
   const handleVoiceChange = (value: string) => {
-    setVoice(value);
+    if (value) {
+      setVoice(value);
+    }
   };
 
   const handleSpeak = (e: SubmitEvent<HTMLFormElement>) => {
@@ -56,52 +58,23 @@ function App() {
     }
     utterThis.pitch = pitch;
     utterThis.rate = rate;
-    console.log(utterThis);
-    console.log(utterThis.pitch);
     window.speechSynthesis.speak(utterThis);
-
-    utterThis.onpause = (event) => {
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
   };
 
   useEffect(() => {
-    let retryCount = 0;
-    let timerId: number;
-
     const setupVoices = () => {
-      if (voice) {
-        return;
-      }
-
       const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
-
-      // HACK: Chrome だと voices が空の配列で返ってくることがあるので、Retry 処理を入れる
-      if (!localVoices.length) {
-        if (retryCount < 5) {
-          console.log("retry...");
-          retryCount++;
-          clearTimeout(timerId);
-          timerId = window.setTimeout(() => {
-            setupVoices();
-          }, 100);
-        } else {
-          console.log("no voices found");
-        }
-        return;
-      }
-
       setVoices(localVoices);
+      const defaultVoice = localVoices.find((v) => v.default);
+      if (defaultVoice) {
+        setVoice(defaultVoice.name);
+      }
     };
-
     setupVoices();
 
-    return () => {
-      clearTimeout(timerId);
-    };
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = setupVoices;
+    }
   }, []);
 
   return (
@@ -157,7 +130,7 @@ function App() {
 
             <Field>
               <FieldLabel>Voice</FieldLabel>
-              <Select onValueChange={handleVoiceChange}>
+              <Select value={voice} onValueChange={handleVoiceChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a voice" />
                 </SelectTrigger>

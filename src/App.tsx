@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Button } from "./components/ui/button";
+import { Pause, Play } from "lucide-react";
 
 function App() {
   const [text, setText] = useState(
@@ -48,7 +49,23 @@ function App() {
     }
   };
 
-  const handleSpeak = (e: SubmitEvent<HTMLFormElement>) => {
+  const resume = () => {
+    if (!window.speechSynthesis.paused) {
+      return;
+    }
+    setIsPaused(false);
+    window.speechSynthesis.resume();
+  };
+
+  const pause = () => {
+    if (!window.speechSynthesis.speaking) {
+      return;
+    }
+    setIsPaused(true);
+    window.speechSynthesis.pause();
+  };
+
+  const playOrPause = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!text) {
@@ -56,6 +73,7 @@ function App() {
     }
 
     if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.paused ? resume() : pause();
       return;
     }
 
@@ -76,22 +94,6 @@ function App() {
         `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
       );
     };
-  };
-
-  const pause = () => {
-    if (!window.speechSynthesis.speaking) {
-      return;
-    }
-    setIsPaused(true);
-    window.speechSynthesis.pause();
-  };
-
-  const resume = () => {
-    if (!window.speechSynthesis.paused) {
-      return;
-    }
-    setIsPaused(false);
-    window.speechSynthesis.resume();
   };
 
   useEffect(() => {
@@ -122,7 +124,7 @@ function App() {
   return (
     <div className="px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        <form onSubmit={handleSpeak}>
+        <form onSubmit={playOrPause}>
           <FieldGroup>
             <div className="flex flex-col gap-1">
               <FieldLegend>Speech synthesizer</FieldLegend>
@@ -191,19 +193,22 @@ function App() {
               </Select>
             </Field>
 
-            <Button>Speak</Button>
-
-            <Button type="button" onClick={pause}>
-              Pause
-            </Button>
-
-            <Button type="button" onClick={resume}>
-              Resume
-            </Button>
-
-            <p>
-              isSpeaking: {isSpeaking ? "true" : "false"} / isPaused: {isPaused ? "true" : "false"}
-            </p>
+            <div className="flex items-center flex-col">
+              <button
+                type="submit"
+                data-state={isSpeaking && !isPaused ? "speaking" : undefined}
+                className="bg-primary text-primary-foreground group relative flex h-12 items-center justify-center overflow-hidden rounded-sm text-2xl font-medium transition active:scale-90"
+              >
+                <div className="translate-x-0 transition flex items-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-10 pr-12">
+                  <Play className="size-6" />
+                  Play
+                </div>
+                <div className="absolute translate-x-[120%] flex items-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-8">
+                  <Pause className="size-6" />
+                  Pause
+                </div>
+              </button>
+            </div>
           </FieldGroup>
         </form>
       </div>

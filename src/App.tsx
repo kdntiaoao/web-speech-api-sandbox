@@ -19,11 +19,16 @@ import {
 import { Button } from "./components/ui/button";
 
 function App() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(
+    "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
+    // "こんにちは",
+  );
   const [rate, setRate] = useState(1);
   const [pitch, setPitch] = useState(1);
   const [voice, setVoice] = useState<string>("");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -50,6 +55,10 @@ function App() {
       return;
     }
 
+    if (window.speechSynthesis.speaking) {
+      return;
+    }
+
     const utterThis = new SpeechSynthesisUtterance(text);
     for (const v of voices) {
       if (v.name === voice) {
@@ -58,7 +67,31 @@ function App() {
     }
     utterThis.pitch = pitch;
     utterThis.rate = rate;
+    setIsSpeaking(true);
     window.speechSynthesis.speak(utterThis);
+
+    utterThis.onpause = (event) => {
+      const char = event.utterance.text.charAt(event.charIndex);
+      console.log(
+        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
+      );
+    };
+  };
+
+  const pause = () => {
+    if (!window.speechSynthesis.speaking) {
+      return;
+    }
+    setIsPaused(true);
+    window.speechSynthesis.pause();
+  };
+
+  const resume = () => {
+    if (!window.speechSynthesis.paused) {
+      return;
+    }
+    setIsPaused(false);
+    window.speechSynthesis.resume();
   };
 
   useEffect(() => {
@@ -66,15 +99,24 @@ function App() {
       const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
       setVoices(localVoices);
       const defaultVoice = localVoices.find((v) => v.default);
-      if (defaultVoice) {
-        setVoice(defaultVoice.name);
-      }
+      setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
     };
     setupVoices();
 
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = setupVoices;
-    }
+    window.speechSynthesis.addEventListener("voiceschanged", setupVoices);
+
+    let animationFrameId: number;
+    const getStatus = () => {
+      setIsSpeaking(window.speechSynthesis.speaking);
+      setIsPaused(window.speechSynthesis.paused);
+      animationFrameId = window.requestAnimationFrame(getStatus);
+    };
+    animationFrameId = window.requestAnimationFrame(getStatus);
+
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", setupVoices);
+      window.cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   return (
@@ -96,6 +138,7 @@ function App() {
               placeholder="Enter text"
               value={text}
               onChange={handleTextChange}
+              disabled={isSpeaking}
             />
 
             <Field>
@@ -110,6 +153,7 @@ function App() {
                 min={0.1}
                 max={10}
                 step={0.1}
+                disabled={isSpeaking}
               />
             </Field>
 
@@ -125,6 +169,7 @@ function App() {
                 min={0}
                 max={2}
                 step={0.1}
+                disabled={isSpeaking}
               />
             </Field>
 
@@ -138,7 +183,7 @@ function App() {
                   <SelectGroup>
                     {voices.map((voice) => (
                       <SelectItem key={voice.name} value={voice.name}>
-                        {voice.name} ({voice.lang})
+                        {voice.name}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -147,6 +192,18 @@ function App() {
             </Field>
 
             <Button>Speak</Button>
+
+            <Button type="button" onClick={pause}>
+              Pause
+            </Button>
+
+            <Button type="button" onClick={resume}>
+              Resume
+            </Button>
+
+            <p>
+              isSpeaking: {isSpeaking ? "true" : "false"} / isPaused: {isPaused ? "true" : "false"}
+            </p>
           </FieldGroup>
         </form>
       </div>

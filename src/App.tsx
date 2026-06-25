@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Button } from "./components/ui/button";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, RotateCw } from "lucide-react";
 
 function App() {
   const [text, setText] = useState(
@@ -94,6 +94,15 @@ function App() {
         `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
       );
     };
+  };
+
+  const cancel = () => {
+    if (!window.speechSynthesis.speaking) {
+      return;
+    }
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsPaused(false);
   };
 
   useEffect(() => {
@@ -193,19 +202,29 @@ function App() {
               </Select>
             </Field>
 
-            <div className="flex items-center flex-col">
+            <div className="flex flex-wrap gap-2 justify-center pt-3">
               <button
                 type="submit"
                 data-state={isSpeaking && !isPaused ? "speaking" : undefined}
-                className="bg-primary text-primary-foreground group relative flex h-12 items-center justify-center overflow-hidden rounded-sm text-2xl font-medium transition active:scale-90"
+                className="bg-primary text-primary-foreground group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
               >
-                <div className="translate-x-0 transition flex items-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-10 pr-12">
-                  <Play className="size-6" />
+                <div className="translate-x-0 transition flex items-center justify-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-7 pr-10 min-w-40">
+                  <Play className="size-5" />
                   Play
                 </div>
-                <div className="absolute translate-x-[120%] flex items-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-8">
-                  <Pause className="size-6" />
+                <div className="absolute translate-x-[120%] flex items-center justify-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-6 pr-7">
+                  <Pause className="size-5" />
                   Pause
+                </div>
+              </button>
+              <button
+                type="button"
+                className="border-primary border bg-white group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
+                onClick={cancel}
+              >
+                <div className="translate-x-0 transition flex items-center justify-center gap-3 pl-7 pr-6 min-w-40">
+                  Reset
+                  <RotateCw className="size-5 transition group-active:rotate-45" />
                 </div>
               </button>
             </div>

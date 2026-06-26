@@ -17,6 +17,7 @@ import {
 } from "./components/ui/select";
 import { Pause, Play, RotateCw } from "lucide-react";
 import { Textarea } from "./components/ui/textarea";
+import Tiptap from "./components/Tiptap";
 
 function App() {
   const [text, setText] = useState(
@@ -158,24 +159,7 @@ function App() {
               </FieldDescription>
             </div>
 
-            <div className="relative">
-              <Textarea
-                id="text"
-                placeholder="Enter text"
-                value={text}
-                onChange={handleTextChange}
-                disabled={isSpeaking}
-              />
-              <div className="absolute inset-0 px-2.5 py-2 select-none pointer-events-none text-base md:text-sm whitespace-pre-wrap border border-transparent text-transparent">
-                {phrases.map((phrase, i) =>
-                  i === currentPhraseIndex ? (
-                    <mark key={i}>{phrase}</mark>
-                  ) : (
-                    <Fragment key={i}>{phrase}</Fragment>
-                  ),
-                )}
-              </div>
-            </div>
+            <Tiptap />
 
             <Field>
               <div className="flex items-center justify-between gap-2">

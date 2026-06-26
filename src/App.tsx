@@ -147,97 +147,101 @@ function App() {
   }, []);
 
   return (
-    <div className="px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="px-4 pt-8">
+      <div className="max-w-5xl mx-auto">
         <form onSubmit={playOrPause}>
-          <FieldGroup>
-            <div className="flex flex-col gap-1">
-              <FieldLegend>Speech synthesizer</FieldLegend>
-              <FieldDescription>
-                Enter some text in the input below and press return to hear it. change voices using
-                the dropdown menu.
-              </FieldDescription>
-            </div>
+          <div className="flex flex-col gap-1">
+            <FieldLegend>Speech synthesizer</FieldLegend>
+            <FieldDescription>
+              Enter some text in the input below and press return to hear it. change voices using
+              the dropdown menu.
+            </FieldDescription>
+          </div>
 
+          <div className="pt-8">
             <Tiptap onChange={handleTextChange} />
+          </div>
 
-            <Field>
-              <div className="flex items-center justify-between gap-2">
-                <FieldLabel htmlFor="rate">Rate (再生速度)</FieldLabel>
-                <span className="text-sm text-muted-foreground">{rate}</span>
+          <div className="sticky bottom-0 left-0 right-0 bg-white py-8">
+            <FieldGroup className="max-w-2xl mx-auto">
+              <Field>
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor="rate">Rate (再生速度)</FieldLabel>
+                  <span className="text-sm text-muted-foreground">{rate}</span>
+                </div>
+                <Slider
+                  id="rate"
+                  value={[rate]}
+                  onValueChange={handleRateChange}
+                  min={0.1}
+                  max={10}
+                  step={0.1}
+                  disabled={isSpeaking}
+                />
+              </Field>
+
+              <Field>
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor="pitch">Pitch (音程)</FieldLabel>
+                  <span className="text-sm text-muted-foreground">{pitch}</span>
+                </div>
+                <Slider
+                  id="pitch"
+                  value={[pitch]}
+                  onValueChange={handlePitchChange}
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  disabled={isSpeaking}
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel>Voice</FieldLabel>
+                <Select value={voice} onValueChange={handleVoiceChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {voices.map((voice) => (
+                        <SelectItem key={voice.name} value={voice.name}>
+                          {voice.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <div className="flex flex-wrap gap-2 justify-center pt-3">
+                <button
+                  type="submit"
+                  data-state={isSpeaking && !isPaused ? "speaking" : undefined}
+                  className="bg-primary text-primary-foreground group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
+                >
+                  <div className="translate-x-0 transition flex items-center justify-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-7 pr-10 min-w-40">
+                    <Play className="size-5" />
+                    Play
+                  </div>
+                  <div className="absolute translate-x-[120%] flex items-center justify-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-6 pr-7">
+                    <Pause className="size-5" />
+                    Pause
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="border-primary border bg-white group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
+                  onClick={cancel}
+                >
+                  <div className="translate-x-0 transition flex items-center justify-center gap-3 pl-7 pr-6 min-w-40">
+                    Reset
+                    <RotateCw className="size-5 transition group-active:rotate-45" />
+                  </div>
+                </button>
               </div>
-              <Slider
-                id="rate"
-                value={[rate]}
-                onValueChange={handleRateChange}
-                min={0.1}
-                max={10}
-                step={0.1}
-                disabled={isSpeaking}
-              />
-            </Field>
-
-            <Field>
-              <div className="flex items-center justify-between gap-2">
-                <FieldLabel htmlFor="pitch">Pitch (音程)</FieldLabel>
-                <span className="text-sm text-muted-foreground">{pitch}</span>
-              </div>
-              <Slider
-                id="pitch"
-                value={[pitch]}
-                onValueChange={handlePitchChange}
-                min={0}
-                max={2}
-                step={0.1}
-                disabled={isSpeaking}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel>Voice</FieldLabel>
-              <Select value={voice} onValueChange={handleVoiceChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a voice" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {voices.map((voice) => (
-                      <SelectItem key={voice.name} value={voice.name}>
-                        {voice.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <div className="flex flex-wrap gap-2 justify-center pt-3">
-              <button
-                type="submit"
-                data-state={isSpeaking && !isPaused ? "speaking" : undefined}
-                className="bg-primary text-primary-foreground group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
-              >
-                <div className="translate-x-0 transition flex items-center justify-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-7 pr-10 min-w-40">
-                  <Play className="size-5" />
-                  Play
-                </div>
-                <div className="absolute translate-x-[120%] flex items-center justify-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-6 pr-7">
-                  <Pause className="size-5" />
-                  Pause
-                </div>
-              </button>
-              <button
-                type="button"
-                className="border-primary border bg-white group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
-                onClick={cancel}
-              >
-                <div className="translate-x-0 transition flex items-center justify-center gap-3 pl-7 pr-6 min-w-40">
-                  Reset
-                  <RotateCw className="size-5 transition group-active:rotate-45" />
-                </div>
-              </button>
-            </div>
-          </FieldGroup>
+            </FieldGroup>
+          </div>
         </form>
       </div>
     </div>

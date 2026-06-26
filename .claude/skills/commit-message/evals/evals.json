@@ -1,0 +1,41 @@
+{
+  "skill_name": "commit-message",
+  "evals": [
+    {
+      "id": 0,
+      "name": "simple-chore",
+      "prompt": "ステージした変更のコミットメッセージを作って",
+      "fixture": "01-simple-chore",
+      "expected_output": "chore: で始まる1行のメッセージ。lint ルール追加を表す。body なし。",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "needs-body",
+      "prompt": "これコミットしたいんだけどメッセージ考えて",
+      "fixture": "02-needs-body",
+      "expected_output": "fix: で始まり、長文読み上げ停止の修正を表す。なぜ分割方式にしたかの理由・影響を説明する body 付き。",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "multiple-changes",
+      "prompt": "ステージしたやつのコミットメッセージお願い",
+      "fixture": "03-multiple-changes",
+      "expected_output": "複数の論理変更(バグ修正 + README更新)が混在している旨の警告と分割提案。各変更のメッセージ案も提示。",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "scope-convention",
+      "prompt": "コミットメッセージを生成して",
+      "fixture": "04-scope-convention",
+      "expected_output": "feat(auth): で始まる。既存履歴の scope 慣習を踏襲。パスワードリセット機能追加を表す。",
+      "assertions": [],
+      "files": []
+    }
+  ]
+}

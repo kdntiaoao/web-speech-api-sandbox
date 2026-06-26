@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import type { FC } from "react";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { ListKit, TaskItem, TaskList } from "@tiptap/extension-list";
 
 type Props = {
   onChange: (content: string) => void;
@@ -40,7 +41,17 @@ const MarkdownPaste = Extension.create({
 
 const Tiptap: FC<Props> = ({ onChange }) => {
   const editor = useEditor({
-    extensions: [StarterKit, Markdown, MarkdownPaste],
+    extensions: [
+      StarterKit,
+      Markdown,
+      MarkdownPaste,
+      TaskList,
+      TaskItem.configure({
+        HTMLAttributes: {
+          class: cn("flex items-start gap-2", "[&>div]:flex-1 [&>div>p]:m-0"),
+        },
+      }),
+    ],
     editorProps: {
       attributes: {
         class: cn(

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ChangeEvent, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import {
   Field,
   FieldDescription,
@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Pause, Play, RotateCw } from "lucide-react";
-import { Textarea } from "./components/ui/textarea";
 import Tiptap from "./components/Tiptap";
 
 function App() {
@@ -29,13 +28,13 @@ function App() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
+  const [_currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
 
   const phrases = text.split(/(?<=[、。．？！\n])/);
   const targetVoice = voices.find((v) => v.name === voice);
 
-  const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+  const handleTextChange = (content: string) => {
+    setText(content);
   };
 
   const handleRateChange = (values: number[]) => {
@@ -68,6 +67,7 @@ function App() {
 
   const speak = (phraseIndex: number) => {
     const phrase = phrases[phraseIndex];
+    console.log("phrase:", phrase);
 
     const utterThis = new SpeechSynthesisUtterance(phrase);
     utterThis.voice = targetVoice ?? null;
@@ -159,7 +159,7 @@ function App() {
               </FieldDescription>
             </div>
 
-            <Tiptap />
+            <Tiptap onChange={handleTextChange} />
 
             <Field>
               <div className="flex items-center justify-between gap-2">

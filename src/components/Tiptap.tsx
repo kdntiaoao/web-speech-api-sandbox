@@ -1,14 +1,50 @@
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "@tiptap/markdown";
+import type { FC } from "react";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 
-const Tiptap = () => {
+type Props = {
+  onChange: (content: string) => void;
+};
+
+/**
+ * Markdown の貼り付けをサポートする Extension
+ * @see https://github.com/ueberdosis/tiptap/issues/1649#issuecomment-2731296289
+ */
+const MarkdownPaste = Extension.create({
+  name: "markdownPaste",
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("markdownPaste"),
+        props: {
+          handlePaste: (_view, event) => {
+            const clipboardText = event.clipboardData?.getData("text/plain");
+
+            if (clipboardText) {
+              this.editor.commands.insertContent(clipboardText, { contentType: "markdown" });
+
+              return true;
+            }
+
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+const Tiptap: FC<Props> = ({ onChange }) => {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, Markdown, MarkdownPaste],
     editorProps: {
       attributes: {
         class: cn(
-          "prose px-2.5 py-2 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
+          "prose p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           "disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
         ),
@@ -16,34 +52,40 @@ const Tiptap = () => {
     },
     content: `
 <h2>
-  Hi there,
+  こんにちは！
 </h2>
 <p>
-  this is a <em>basic</em> example of <strong>Tiptap</strong>. Sure, there are all kind of basic text styles you'd probably expect from a text editor. But wait until you see the lists:
+  これは <strong>Tiptap</strong> の<em>基本構造</em>を示したサンプルです。もちろん、**テキストエディタ**に期待されるような、あらゆる基本的なテキストスタイルに対応しています。ですが、こちらのリスト機能もぜひご覧ください：
 </p>
 <ul>
   <li>
-    That's a bullet list with one …
+    このように箇条書きの項目が1つ…
   </li>
   <li>
-    … or two list items.
+    …または2つと並べられます。
   </li>
 </ul>
 <p>
-  Isn't that great? And all of that is editable. But wait, there's more. Let's try a code block:
+  素敵だと思いませんか？しかも、これらはすべてその場で編集可能です。まだまだこれだけではありません。次はコードブロックを試してみましょう：
 </p>
 <pre><code class="language-css">body {
   display: none;
 }</code></pre>
 <p>
-  I know, I know, this is impressive. It's only the tip of the iceberg though. Give it a try and click a little bit around. Don't forget to check the other examples too.
+  驚くのも無理はありません。ですが、これでもほんの氷山の一角にすぎないのです。ぜひ実際に色々とクリックして試してみてください。他のサンプルをチェックするのもお忘れなく！
 </p>
 <blockquote>
-  Wow, that's amazing. Good work, boy! 👏
+  わあ、本当に素晴らしいわ。よくやったわね！👏
   <br />
-  — Mom
+  — お母さんより
 </blockquote>
 `,
+    onUpdate: ({ editor: currentEditor }) => {
+      onChange(currentEditor.getMarkdown());
+    },
+    onCreate: ({ editor: currentEditor }) => {
+      onChange(currentEditor.getMarkdown());
+    },
   });
 
   return <EditorContent editor={editor} />;

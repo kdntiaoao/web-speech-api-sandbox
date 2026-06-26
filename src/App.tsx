@@ -1,4 +1,4 @@
-import { useEffect, useState, type SubmitEvent } from "react";
+import { Fragment, useEffect, useState, type ChangeEvent, type SubmitEvent } from "react";
 import {
   Field,
   FieldDescription,
@@ -6,7 +6,6 @@ import {
   FieldLabel,
   FieldLegend,
 } from "./components/ui/field";
-import { Input } from "./components/ui/input";
 import { Slider } from "./components/ui/slider";
 import {
   Select,
@@ -16,13 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./components/ui/select";
-import { Button } from "./components/ui/button";
 import { Pause, Play, RotateCw } from "lucide-react";
+import { Textarea } from "./components/ui/textarea";
 
 function App() {
   const [text, setText] = useState(
-    "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
-    // "こんにちは",
+    `あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。`,
   );
   const [rate, setRate] = useState(1);
   const [pitch, setPitch] = useState(1);
@@ -30,8 +28,12 @@ function App() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const phrases = text.split(/(?<=[、。．？！\n])/);
+  const targetVoice = voices.find((v) => v.name === voice);
+
+  const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
   };
 
@@ -53,7 +55,6 @@ function App() {
     if (!window.speechSynthesis.paused) {
       return;
     }
-    setIsPaused(false);
     window.speechSynthesis.resume();
   };
 
@@ -61,8 +62,45 @@ function App() {
     if (!window.speechSynthesis.speaking) {
       return;
     }
-    setIsPaused(true);
     window.speechSynthesis.pause();
+  };
+
+  const speak = (phraseIndex: number) => {
+    const phrase = phrases[phraseIndex];
+
+    const utterThis = new SpeechSynthesisUtterance(phrase);
+    utterThis.voice = targetVoice ?? null;
+    utterThis.pitch = pitch;
+    utterThis.rate = rate;
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterThis);
+
+    utterThis.onpause = (event) => {
+      setIsPaused(true);
+      const char = event.utterance.text.charAt(event.charIndex);
+      console.log(
+        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
+      );
+    };
+
+    utterThis.onresume = (event) => {
+      setIsPaused(false);
+      const char = event.utterance.text.charAt(event.charIndex);
+      console.log(
+        `Speech resumed at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
+      );
+    };
+
+    utterThis.onend = () => {
+      if (phraseIndex < phrases.length - 1) {
+        setCurrentPhraseIndex(phraseIndex + 1);
+        speak(phraseIndex + 1);
+      } else {
+        setIsSpeaking(false);
+        setIsPaused(false);
+        setCurrentPhraseIndex(null);
+      }
+    };
   };
 
   const playOrPause = (e: SubmitEvent<HTMLFormElement>) => {
@@ -77,56 +115,33 @@ function App() {
       return;
     }
 
-    const utterThis = new SpeechSynthesisUtterance(text);
-    for (const v of voices) {
-      if (v.name === voice) {
-        utterThis.voice = v;
-      }
-    }
-    utterThis.pitch = pitch;
-    utterThis.rate = rate;
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterThis);
-
-    utterThis.onpause = (event) => {
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
+    setCurrentPhraseIndex(0);
+    speak(0);
   };
 
   const cancel = () => {
     if (!window.speechSynthesis.speaking) {
       return;
     }
-    window.speechSynthesis.cancel();
     setIsSpeaking(false);
     setIsPaused(false);
+    setCurrentPhraseIndex(null);
+    window.speechSynthesis.cancel();
   };
 
   useEffect(() => {
-    const setupVoices = () => {
+    const populateVoices = () => {
       const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
       setVoices(localVoices);
       const defaultVoice = localVoices.find((v) => v.default);
       setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
     };
-    setupVoices();
+    populateVoices();
 
-    window.speechSynthesis.addEventListener("voiceschanged", setupVoices);
-
-    let animationFrameId: number;
-    const getStatus = () => {
-      setIsSpeaking(window.speechSynthesis.speaking);
-      setIsPaused(window.speechSynthesis.paused);
-      animationFrameId = window.requestAnimationFrame(getStatus);
-    };
-    animationFrameId = window.requestAnimationFrame(getStatus);
+    window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
 
     return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", setupVoices);
-      window.cancelAnimationFrame(animationFrameId);
+      window.speechSynthesis.removeEventListener("voiceschanged", populateVoices);
     };
   }, []);
 
@@ -143,14 +158,24 @@ function App() {
               </FieldDescription>
             </div>
 
-            <Input
-              id="text"
-              type="text"
-              placeholder="Enter text"
-              value={text}
-              onChange={handleTextChange}
-              disabled={isSpeaking}
-            />
+            <div className="relative">
+              <Textarea
+                id="text"
+                placeholder="Enter text"
+                value={text}
+                onChange={handleTextChange}
+                disabled={isSpeaking}
+              />
+              <div className="absolute inset-0 px-2.5 py-2 select-none pointer-events-none text-base md:text-sm whitespace-pre-wrap border border-transparent text-transparent">
+                {phrases.map((phrase, i) =>
+                  i === currentPhraseIndex ? (
+                    <mark key={i}>{phrase}</mark>
+                  ) : (
+                    <Fragment key={i}>{phrase}</Fragment>
+                  ),
+                )}
+              </div>
+            </div>
 
             <Field>
               <div className="flex items-center justify-between gap-2">

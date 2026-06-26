@@ -48,14 +48,14 @@ const Tiptap: FC<Props> = ({ onChange }) => {
       TaskList,
       TaskItem.configure({
         HTMLAttributes: {
-          class: cn("flex items-start gap-2", "[&>div]:flex-1 [&>div>p]:m-0"),
+          class: cn("flex items-start gap-2 p-0", "[&>div]:flex-1 [&>div>p]:m-0"),
         },
       }),
     ],
     editorProps: {
       attributes: {
         class: cn(
-          "prose p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
+          "prose prose-ul:data-[type=taskList]:ps-2 p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           "disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
         ),

@@ -16,25 +16,22 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Pause, Play, RotateCw } from "lucide-react";
-import Tiptap from "./components/Tiptap";
+import Tiptap, { type Phrase } from "./components/Tiptap";
 
 function App() {
-  const [text, setText] = useState(
-    `あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。`,
-  );
+  const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [rate, setRate] = useState(1);
   const [pitch, setPitch] = useState(1);
   const [voice, setVoice] = useState<string>("");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [_currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
 
-  const phrases = text.split(/(?<=[、。．？！\n])/);
   const targetVoice = voices.find((v) => v.name === voice);
 
-  const handleTextChange = (content: string) => {
-    setText(content);
+  const handlePhrasesChange = (nextPhrases: Phrase[]) => {
+    setPhrases(nextPhrases);
   };
 
   const handleRateChange = (values: number[]) => {
@@ -69,7 +66,7 @@ function App() {
     const phrase = phrases[phraseIndex];
     console.log("phrase:", phrase);
 
-    const utterThis = new SpeechSynthesisUtterance(phrase);
+    const utterThis = new SpeechSynthesisUtterance(phrase.text);
     utterThis.voice = targetVoice ?? null;
     utterThis.pitch = pitch;
     utterThis.rate = rate;
@@ -107,7 +104,7 @@ function App() {
   const playOrPause = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!text) {
+    if (phrases.length === 0) {
       return;
     }
 
@@ -159,7 +156,11 @@ function App() {
           </div>
 
           <div className="pt-8">
-            <Tiptap onChange={handleTextChange} />
+            <Tiptap
+              onChange={handlePhrasesChange}
+              currentPhraseIndex={currentPhraseIndex}
+              editable={!isSpeaking}
+            />
           </div>
 
           <div className="sticky bottom-0 left-0 right-0 bg-white py-8">

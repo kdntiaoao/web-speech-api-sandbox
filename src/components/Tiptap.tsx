@@ -2,12 +2,68 @@ import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
-import type { FC } from "react";
+import { useEffect, useRef, type FC } from "react";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { ListKit, TaskItem, TaskList } from "@tiptap/extension-list";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+
+/** 読み上げ 1 フレーズ。`from`/`to` は ProseMirror ドキュメント上の位置。 */
+export type Phrase = { text: string; from: number; to: number };
 
 type Props = {
-  onChange: (content: string) => void;
+  onChange: (phrases: Phrase[]) => void;
+  /** 読み上げ中のフレーズ index。null ならハイライト無し。 */
+  currentPhraseIndex: number | null;
+  /** 編集可能か（読み上げ中は false にして位置を固定する）。 */
+  editable: boolean;
+};
+
+const SPLIT_CHARS = /[、。．？！\n]/;
+
+/**
+ * ProseMirror ドキュメントを走査し、表示テキストを句読点とブロック境界で
+ * フレーズに分割する。各フレーズはドキュメント上の位置（from/to）を保持する。
+ */
+const computePhrases = (doc: ProseMirrorNode): Phrase[] => {
+  const phrases: Phrase[] = [];
+  let current: Phrase | null = null;
+
+  const flush = () => {
+    if (current && current.text.trim() !== "") {
+      phrases.push(current);
+    }
+    current = null;
+  };
+
+  doc.descendants((node, pos) => {
+    // 新しいブロック・改行（hardBreak）でフレーズを区切る
+    if (node.isBlock || node.type.name === "hardBreak") {
+      flush();
+      return true;
+    }
+
+    if (node.isText && node.text) {
+      const text = node.text;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const charPos = pos + i;
+        if (!current) {
+          current = { text: "", from: charPos, to: charPos };
+        }
+        current.text += char;
+        current.to = charPos + 1;
+        if (SPLIT_CHARS.test(char)) {
+          flush();
+        }
+      }
+    }
+
+    return true;
+  });
+
+  flush();
+  return phrases;
 };
 
 /**
@@ -39,12 +95,62 @@ const MarkdownPaste = Extension.create({
   },
 });
 
-const Tiptap: FC<Props> = ({ onChange }) => {
+const highlightPluginKey = new PluginKey("playbackHighlight");
+
+/**
+ * 読み上げ中フレーズの背景ハイライトを描く Extension。
+ * `setMeta(highlightPluginKey, { from, to } | null)` で対象範囲を更新する。
+ */
+const PlaybackHighlight = Extension.create({
+  name: "playbackHighlight",
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: highlightPluginKey,
+        state: {
+          init() {
+            return DecorationSet.empty;
+          },
+          apply(tr, old) {
+            const meta = tr.getMeta(highlightPluginKey) as { from: number; to: number } | null;
+            if (meta !== undefined) {
+              if (!meta) {
+                return DecorationSet.empty;
+              }
+              return DecorationSet.create(tr.doc, [
+                Decoration.inline(meta.from, meta.to, { class: "speaking-highlight" }),
+              ]);
+            }
+            return old.map(tr.mapping, tr.doc);
+          },
+        },
+        props: {
+          decorations(state) {
+            return highlightPluginKey.getState(state);
+          },
+        },
+      }),
+    ];
+  },
+});
+
+const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
+  // 最後に算出したフレーズ配列。currentPhraseIndex から位置を引くために保持する。
+  const phrasesRef = useRef<Phrase[]>([]);
+
+  const emitPhrases = (doc: ProseMirrorNode) => {
+    const phrases = computePhrases(doc);
+    phrasesRef.current = phrases;
+    onChange(phrases);
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Markdown,
       MarkdownPaste,
+      PlaybackHighlight,
       TaskList,
       TaskItem.configure({
         HTMLAttributes: {
@@ -92,12 +198,31 @@ const Tiptap: FC<Props> = ({ onChange }) => {
 </blockquote>
 `,
     onUpdate: ({ editor: currentEditor }) => {
-      onChange(currentEditor.getMarkdown());
+      emitPhrases(currentEditor.state.doc);
     },
     onCreate: ({ editor: currentEditor }) => {
-      onChange(currentEditor.getMarkdown());
+      emitPhrases(currentEditor.state.doc);
     },
   });
+
+  // 読み上げ中は編集を禁止し、フレーズ位置を固定する。
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editor, editable]);
+
+  // 現在のフレーズ位置にハイライトの Decoration を反映する。
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+    const phrase = currentPhraseIndex !== null ? phrasesRef.current[currentPhraseIndex] : null;
+    editor.view.dispatch(
+      editor.view.state.tr.setMeta(
+        highlightPluginKey,
+        phrase ? { from: phrase.from, to: phrase.to } : null,
+      ),
+    );
+  }, [editor, currentPhraseIndex]);
 
   return <EditorContent editor={editor} />;
 };

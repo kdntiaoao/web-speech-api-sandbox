@@ -129,3 +129,11 @@
     @apply font-sans;
   }
 }
+
+/* 読み上げ中フレーズのハイライト（ProseMirror Decoration から付与） */
+.speaking-highlight {
+  background-color: oklch(0.905 0.182 98);
+  border-radius: 0.2em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

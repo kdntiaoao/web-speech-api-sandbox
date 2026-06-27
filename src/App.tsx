@@ -1,11 +1,5 @@
 import { useEffect, useState, type SubmitEvent } from "react";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-} from "./components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "./components/ui/field";
 import { Slider } from "./components/ui/slider";
 import {
   Select,

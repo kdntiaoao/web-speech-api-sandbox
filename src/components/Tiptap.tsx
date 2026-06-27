@@ -125,7 +125,7 @@ const PlaybackHighlight = Extension.create({
             }
             return DecorationSet.create(tr.doc, [
               Decoration.inline(meta.from, meta.to, {
-                class: "speaking-highlight",
+                class: "bg-yellow-400/20",
               }),
             ]);
           },
@@ -168,7 +168,7 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
         class: cn(
           "prose prose-ul:data-[type=taskList]:ps-2 p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          "disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
+          "[[contenteditable='false']]:cursor-not-allowed [[contenteditable='false']]:bg-input/50 [[contenteditable='false']]:opacity-70",
         ),
       },
     },

@@ -145,25 +145,26 @@ function App() {
 
   return (
     <div className="px-4 pt-8">
-      <div className="max-w-5xl mx-auto">
-        <form onSubmit={playOrPause}>
-          <div className="flex flex-col gap-1">
-            <FieldLegend>Speech synthesizer</FieldLegend>
-            <FieldDescription>
-              Enter some text in the input below and press return to hear it. change voices using
-              the dropdown menu.
-            </FieldDescription>
-          </div>
+      <form onSubmit={playOrPause}>
+        <div className="flex flex-col gap-1 max-w-5xl mx-auto">
+          <FieldLegend>Speech synthesizer</FieldLegend>
+          <FieldDescription>
+            Enter some text in the input below and press return to hear it. change voices using
+            the dropdown menu.
+          </FieldDescription>
+        </div>
 
-          <div className="pt-8">
-            <Tiptap
-              onChange={handlePhrasesChange}
-              currentPhraseIndex={currentPhraseIndex}
-              editable={!isSpeaking}
-            />
-          </div>
+        <div className="pt-8 max-w-5xl mx-auto">
+          <Tiptap
+            onChange={handlePhrasesChange}
+            currentPhraseIndex={currentPhraseIndex}
+            editable={!isSpeaking}
+          />
+        </div>
 
-          <div className="sticky bottom-0 left-0 right-0 bg-white py-8">
+        <div className="sticky bottom-0 left-0 right-0">
+          <div className="pt-8 bg-linear-to-t from-white to-transparent"></div>
+          <div className="bg-white pb-8">
             <FieldGroup className="max-w-2xl mx-auto">
               <Field>
                 <div className="flex items-center justify-between gap-2">
@@ -243,8 +244,8 @@ function App() {
               </div>
             </FieldGroup>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

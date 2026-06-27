@@ -1,4 +1,10 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["package.json"]
+  "ignorePatterns": ["package.json"],
+  // @see https://oxc.rs/docs/guide/usage/formatter/sorting.html#sort-tailwind-css-classes
+  "sortTailwindcss": {
+    "stylesheet": "./src/index.css",
+    "functions": ["clsx", "cn"],
+    "preserveWhitespace": true
+  }
 }

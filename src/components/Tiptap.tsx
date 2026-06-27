@@ -166,9 +166,9 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-ul:data-[type=taskList]:ps-2 p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          "[[contenteditable='false']]:cursor-not-allowed [[contenteditable='false']]:bg-input/50 [[contenteditable='false']]:opacity-70",
+          "prose prose-sm max-w-none rounded-lg border border-input p-3 xl:prose-base xl:p-5 prose-ul:data-[type=taskList]:ps-2 [&_li>p]:m-0",
+          "focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50",
+          "[[contenteditable='false']]:cursor-not-allowed [[contenteditable='false']]:bg-input/50",
         ),
       },
     },
@@ -222,17 +222,12 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
     }
     // currentPhraseIndex が null の場合はハイライトを消す (DecorationSet.empty)
     if (currentPhraseIndex === null) {
-      editor.view.dispatch(
-        editor.view.state.tr.setMeta(highlightPluginKey, null),
-      );
+      editor.view.dispatch(editor.view.state.tr.setMeta(highlightPluginKey, null));
       return;
     }
     const phrase = phrasesRef.current[currentPhraseIndex];
     editor.view.dispatch(
-      editor.view.state.tr.setMeta(
-        highlightPluginKey,
-        {  from: phrase.from, to: phrase.to },
-      ),
+      editor.view.state.tr.setMeta(highlightPluginKey, { from: phrase.from, to: phrase.to }),
     );
   }, [editor, currentPhraseIndex]);
 

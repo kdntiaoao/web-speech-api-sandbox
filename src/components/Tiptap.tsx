@@ -222,17 +222,12 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
     }
     // currentPhraseIndex が null の場合はハイライトを消す (DecorationSet.empty)
     if (currentPhraseIndex === null) {
-      editor.view.dispatch(
-        editor.view.state.tr.setMeta(highlightPluginKey, null),
-      );
+      editor.view.dispatch(editor.view.state.tr.setMeta(highlightPluginKey, null));
       return;
     }
     const phrase = phrasesRef.current[currentPhraseIndex];
     editor.view.dispatch(
-      editor.view.state.tr.setMeta(
-        highlightPluginKey,
-        {  from: phrase.from, to: phrase.to },
-      ),
+      editor.view.state.tr.setMeta(highlightPluginKey, { from: phrase.from, to: phrase.to }),
     );
   }, [editor, currentPhraseIndex]);
 

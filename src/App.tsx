@@ -149,8 +149,8 @@ function App() {
         <div className="flex flex-col gap-1 max-w-5xl mx-auto">
           <FieldLegend>Speech synthesizer</FieldLegend>
           <FieldDescription>
-            Enter some text in the input below and press return to hear it. change voices using
-            the dropdown menu.
+            Enter some text in the input below and press return to hear it. change voices using the
+            dropdown menu.
           </FieldDescription>
         </div>
 

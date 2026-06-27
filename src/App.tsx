@@ -138,7 +138,7 @@ function App() {
   }, []);
 
   return (
-    <div className="pt-8 min-h-screen flex flex-col">
+    <div className="pt-5 xl:pt-8 min-h-screen flex flex-col">
       <div className="px-3 xl:px-5">
         <div className="flex flex-col gap-1 max-w-5xl mx-auto">
           <h1 className="text-xl font-bold xl:text-2xl">テキスト読み上げツール</h1>
@@ -151,7 +151,7 @@ function App() {
       </div>
 
       <form className="flex-1 flex flex-col" onSubmit={playOrPause}>
-        <div className="pt-8 px-3 xl:px-5">
+        <div className="pt-6 xl:pt-8 px-3 xl:px-5">
           <div className="max-w-5xl mx-auto">
             <Tiptap
               onChange={handlePhrasesChange}
@@ -161,13 +161,13 @@ function App() {
           </div>
         </div>
 
-        <div className="sticky bottom-0 left-0 right-0 bg-white px-3 xl:px-5 py-8 mt-auto">
+        <div className="sticky bottom-0 left-0 right-0 bg-white px-3 xl:px-5 py-6 xl:py-8 mt-auto">
           <div
             data-hidden={isSpeaking ? true : undefined}
             className="max-w-2xl mx-auto grid grid-rows-[1fr] data-hidden:grid-rows-[0fr] transition-[grid-template-rows] duration-500"
           >
             <div className="overflow-hidden">
-              <FieldGroup className="pb-7">
+              <div className="flex flex-col gap-5 pb-6 xl:pb-7">
                 <Field>
                   <div className="flex items-center justify-between gap-2">
                     <FieldLabel htmlFor="rate">再生速度</FieldLabel>
@@ -217,7 +217,7 @@ function App() {
                     </SelectContent>
                   </Select>
                 </Field>
-              </FieldGroup>
+              </div>
             </div>
           </div>
 

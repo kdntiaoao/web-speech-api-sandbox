@@ -19,7 +19,7 @@ type Props = {
   editable: boolean;
 };
 
-const SPLIT_CHARS = /[、。．？！\n]/;
+const SPLIT_CHARS = "、。．？！\n";
 
 /**
  * ProseMirror ドキュメントを走査し、表示テキストを句読点とブロック境界で
@@ -29,6 +29,7 @@ const computePhrases = (doc: ProseMirrorNode): Phrase[] => {
   const phrases: Phrase[] = [];
   let current: Phrase | null = null;
 
+  // 組み立て中のフレーズを吐き出して、current を空にする (空・空白のみは捨てる)
   const flush = () => {
     if (current && current.text.trim() !== "") {
       phrases.push(current);
@@ -40,7 +41,7 @@ const computePhrases = (doc: ProseMirrorNode): Phrase[] => {
     // 新しいブロック・改行（hardBreak）でフレーズを区切る
     if (node.isBlock || node.type.name === "hardBreak") {
       flush();
-      return true;
+      return;
     }
 
     if (node.isText && node.text) {
@@ -53,13 +54,11 @@ const computePhrases = (doc: ProseMirrorNode): Phrase[] => {
         }
         current.text += char;
         current.to = charPos + 1;
-        if (SPLIT_CHARS.test(char)) {
+        if (SPLIT_CHARS.includes(char)) {
           flush();
         }
       }
     }
-
-    return true;
   });
 
   flush();
@@ -112,17 +111,23 @@ const PlaybackHighlight = Extension.create({
           init() {
             return DecorationSet.empty;
           },
-          apply(tr, old) {
-            const meta = tr.getMeta(highlightPluginKey) as { from: number; to: number } | null;
-            if (meta !== undefined) {
-              if (!meta) {
-                return DecorationSet.empty;
-              }
-              return DecorationSet.create(tr.doc, [
-                Decoration.inline(meta.from, meta.to, { class: "speaking-highlight" }),
-              ]);
+          // ProseMirror に何か変化 (トランザクション) が起きるたびに呼ばれる
+          apply(tr, value) {
+            const meta = tr.getMeta(highlightPluginKey) as
+              | { from: number; to: number }
+              | null
+              | undefined;
+            if (meta === undefined) {
+              return value.map(tr.mapping, tr.doc);
             }
-            return old.map(tr.mapping, tr.doc);
+            if (meta === null) {
+              return DecorationSet.empty;
+            }
+            return DecorationSet.create(tr.doc, [
+              Decoration.inline(meta.from, meta.to, {
+                class: "speaking-highlight",
+              }),
+            ]);
           },
         },
         props: {
@@ -215,11 +220,18 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
     if (!editor) {
       return;
     }
-    const phrase = currentPhraseIndex !== null ? phrasesRef.current[currentPhraseIndex] : null;
+    // currentPhraseIndex が null の場合はハイライトを消す (DecorationSet.empty)
+    if (currentPhraseIndex === null) {
+      editor.view.dispatch(
+        editor.view.state.tr.setMeta(highlightPluginKey, null),
+      );
+      return;
+    }
+    const phrase = phrasesRef.current[currentPhraseIndex];
     editor.view.dispatch(
       editor.view.state.tr.setMeta(
         highlightPluginKey,
-        phrase ? { from: phrase.from, to: phrase.to } : null,
+        {  from: phrase.from, to: phrase.to },
       ),
     );
   }, [editor, currentPhraseIndex]);

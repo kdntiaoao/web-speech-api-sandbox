@@ -166,7 +166,7 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-sm xl:prose-base prose-ul:data-[type=taskList]:ps-2 p-3 xl:p-5 [&_li>p]:m-0 border border-input max-w-none rounded-lg",
+          "prose prose-sm max-w-none rounded-lg border border-input p-3 xl:prose-base xl:p-5 prose-ul:data-[type=taskList]:ps-2 [&_li>p]:m-0",
           "focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50",
           "[[contenteditable='false']]:cursor-not-allowed [[contenteditable='false']]:bg-input/50",
         ),

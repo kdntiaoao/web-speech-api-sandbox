@@ -138,9 +138,9 @@ function App() {
   }, []);
 
   return (
-    <div className="pt-5 xl:pt-8 min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col pt-5 xl:pt-8">
       <div className="px-3 xl:px-5">
-        <div className="flex flex-col gap-1 max-w-5xl mx-auto">
+        <div className="mx-auto flex max-w-5xl flex-col gap-1">
           <h1 className="text-xl font-bold xl:text-2xl">テキスト読み上げツール</h1>
           <p>
             テキストを入力して、再生速度や音程、声の種類を選択して読み上げることができます。
@@ -150,9 +150,9 @@ function App() {
         </div>
       </div>
 
-      <form className="flex-1 flex flex-col" onSubmit={playOrPause}>
-        <div className="pt-6 xl:pt-8 px-3 xl:px-5">
-          <div className="max-w-5xl mx-auto">
+      <form className="flex flex-1 flex-col" onSubmit={playOrPause}>
+        <div className="px-3 pt-6 xl:px-5 xl:pt-8">
+          <div className="mx-auto max-w-5xl">
             <Tiptap
               onChange={handlePhrasesChange}
               currentPhraseIndex={currentPhraseIndex}
@@ -161,10 +161,10 @@ function App() {
           </div>
         </div>
 
-        <div className="sticky bottom-0 left-0 right-0 bg-white px-3 xl:px-5 py-6 xl:py-8 mt-auto">
+        <div className="sticky right-0 bottom-0 left-0 mt-auto bg-white px-3 py-6 xl:px-5 xl:py-8">
           <div
             data-hidden={isSpeaking ? true : undefined}
-            className="max-w-2xl mx-auto grid grid-rows-[1fr] data-hidden:grid-rows-[0fr] transition-[grid-template-rows] duration-500"
+            className="mx-auto grid max-w-2xl grid-rows-[1fr] transition-[grid-template-rows] duration-500 data-hidden:grid-rows-[0fr]"
           >
             <div className="overflow-hidden">
               <div className="flex flex-col gap-5 pb-6 xl:pb-7">
@@ -221,27 +221,27 @@ function App() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               type="submit"
               data-state={isSpeaking && !isPaused ? "speaking" : undefined}
-              className="bg-primary text-primary-foreground group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
+              className="group relative flex h-10 items-center justify-center overflow-hidden rounded-sm bg-primary text-xl font-medium text-primary-foreground transition active:scale-90"
             >
-              <div className="translate-x-0 transition flex items-center justify-center gap-3 group-data-[state=speaking]:translate-x-[-120%] pl-7 pr-10 min-w-40">
+              <div className="flex min-w-40 translate-x-0 items-center justify-center gap-3 pr-10 pl-7 transition group-data-[state=speaking]:translate-x-[-120%]">
                 <Play className="size-5" />
                 Play
               </div>
-              <div className="absolute translate-x-[120%] flex items-center justify-center gap-3 transition group-data-[state=speaking]:translate-x-0 w-full pl-6 pr-7">
+              <div className="absolute flex w-full translate-x-[120%] items-center justify-center gap-3 pr-7 pl-6 transition group-data-[state=speaking]:translate-x-0">
                 <Pause className="size-5" />
                 Pause
               </div>
             </button>
             <button
               type="button"
-              className="border-primary border bg-white group relative flex h-10 items-center justify-center overflow-hidden rounded-sm text-xl font-medium transition active:scale-90"
+              className="group relative flex h-10 items-center justify-center overflow-hidden rounded-sm border border-primary bg-white text-xl font-medium transition active:scale-90"
               onClick={cancel}
             >
-              <div className="translate-x-0 transition flex items-center justify-center gap-3 pl-7 pr-6 min-w-40">
+              <div className="flex min-w-40 translate-x-0 items-center justify-center gap-3 pr-6 pl-7 transition">
                 Reset
                 <RotateCw className="size-5 transition group-active:rotate-45" />
               </div>

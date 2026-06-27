@@ -141,7 +141,7 @@ function App() {
     <div className="pt-8 min-h-screen flex flex-col">
       <div className="px-3 xl:px-5">
         <div className="flex flex-col gap-1 max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold">テキスト読み上げツール</h1>
+          <h1 className="text-xl font-bold xl:text-2xl">テキスト読み上げツール</h1>
           <p>
             テキストを入力して、再生速度や音程、声の種類を選択して読み上げることができます。
             <br />

@@ -1,4 +1,5 @@
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import EasySpeech from "easy-speech";
 import { Field, FieldLabel } from "./components/ui/field";
 import { Slider } from "./components/ui/slider";
 import {
@@ -21,6 +22,8 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
+  const stoppedRef = useRef(false);
 
   const targetVoice = voices.find((v) => v.name === voice);
 
@@ -42,57 +45,34 @@ function App() {
     }
   };
 
-  const resume = () => {
-    if (!window.speechSynthesis.paused) {
-      return;
-    }
-    window.speechSynthesis.resume();
-  };
-
-  const pause = () => {
-    if (!window.speechSynthesis.speaking) {
-      return;
-    }
-    window.speechSynthesis.pause();
-  };
-
   const speak = (phraseIndex: number) => {
     const phrase = phrases[phraseIndex];
-    console.log("phrase:", phrase);
 
-    const utterThis = new SpeechSynthesisUtterance(phrase.text);
-    utterThis.voice = targetVoice ?? null;
-    utterThis.pitch = pitch;
-    utterThis.rate = rate;
     setIsSpeaking(true);
-    window.speechSynthesis.speak(utterThis);
-
-    utterThis.onpause = (event) => {
-      setIsPaused(true);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
-
-    utterThis.onresume = (event) => {
-      setIsPaused(false);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech resumed at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
-
-    utterThis.onend = () => {
-      if (phraseIndex < phrases.length - 1) {
-        setCurrentPhraseIndex(phraseIndex + 1);
-        speak(phraseIndex + 1);
-      } else {
-        setIsSpeaking(false);
-        setIsPaused(false);
-        setCurrentPhraseIndex(null);
-      }
-    };
+    EasySpeech.speak({
+      text: phrase.text,
+      ...(targetVoice ? { voice: targetVoice } : {}),
+      pitch,
+      rate,
+      pause: () => setIsPaused(true),
+      resume: () => setIsPaused(false),
+      end: () => {
+        // cancel() で中断された場合はここで自動進行させない。
+        if (stoppedRef.current) {
+          return;
+        }
+        if (phraseIndex < phrases.length - 1) {
+          setCurrentPhraseIndex(phraseIndex + 1);
+          speak(phraseIndex + 1);
+        } else {
+          setIsSpeaking(false);
+          setIsPaused(false);
+          setCurrentPhraseIndex(null);
+        }
+      },
+    }).catch(() => {
+      // cancel() 等で中断されると speak は reject する。状態は cancel() 側で処理済み。
+    });
   };
 
   const playOrPause = (e: SubmitEvent<HTMLFormElement>) => {
@@ -102,38 +82,51 @@ function App() {
       return;
     }
 
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.paused ? resume() : pause();
+    if (isSpeaking) {
+      if (isPaused) {
+        EasySpeech.resume();
+      } else {
+        EasySpeech.pause();
+      }
       return;
     }
 
+    stoppedRef.current = false;
     setCurrentPhraseIndex(0);
     speak(0);
   };
 
   const cancel = () => {
-    if (!window.speechSynthesis.speaking) {
-      return;
-    }
+    stoppedRef.current = true;
     setIsSpeaking(false);
     setIsPaused(false);
     setCurrentPhraseIndex(null);
-    window.speechSynthesis.cancel();
+    EasySpeech.cancel();
   };
 
   useEffect(() => {
-    const populateVoices = () => {
-      const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
-      setVoices(localVoices);
-      const defaultVoice = localVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
-    };
-    populateVoices();
+    let active = true;
 
-    window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
+    EasySpeech.init({ maxTimeout: 5000, interval: 250 })
+      .then(() => {
+        if (!active) {
+          return;
+        }
+        // ja-JP / ja_JP など表記揺れに対応して日本語音声を抽出する。
+        const localVoices = EasySpeech.voices().filter((v) =>
+          v.lang.replace("_", "-").toLowerCase().startsWith("ja"),
+        );
+        setVoices(localVoices);
+        const defaultVoice = localVoices.find((v) => v.default);
+        setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
+        setReady(true);
+      })
+      .catch((error) => {
+        console.error("EasySpeech init failed:", error);
+      });
 
     return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", populateVoices);
+      active = false;
     };
   }, []);
 
@@ -224,8 +217,9 @@ function App() {
           <div className="flex flex-wrap justify-center gap-2">
             <button
               type="submit"
+              disabled={!ready || phrases.length === 0}
               data-state={isSpeaking && !isPaused ? "speaking" : undefined}
-              className="group relative flex h-10 items-center justify-center overflow-hidden rounded-sm bg-primary text-xl font-medium text-primary-foreground transition active:scale-90"
+              className="group relative flex h-10 items-center justify-center overflow-hidden rounded-sm bg-primary text-xl font-medium text-primary-foreground transition active:scale-90 disabled:pointer-events-none disabled:opacity-50"
             >
               <div className="flex min-w-40 translate-x-0 items-center justify-center gap-3 pr-10 pl-7 transition group-data-[state=speaking]:translate-x-[-120%]">
                 <Play className="size-5" />

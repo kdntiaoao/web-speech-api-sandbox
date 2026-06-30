@@ -172,9 +172,13 @@ function App() {
     populateVoices();
 
     window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
+    window.speechSynthesis.addEventListener("load", cancel);
+    window.speechSynthesis.addEventListener("beforeunload", cancel);
 
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", populateVoices);
+      window.speechSynthesis.removeEventListener("load", cancel);
+      window.speechSynthesis.removeEventListener("beforeunload", cancel);
     };
   }, []);
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { Field, FieldLabel } from "./components/ui/field";
 import { Slider } from "./components/ui/slider";
 import {
@@ -28,10 +28,6 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState<number | null>(null);
-  // Android の擬似 pause 用。意図的な cancel() 中は onend の自動前進を抑止する。
-  const isPausingRef = useRef(false);
-  // 再開すべきフレーズ位置。callback 内クロージャの stale 化を避けるため ref で保持。
-  const currentPhraseIndexRef = useRef(0);
 
   const targetVoice = voices.find((v) => v.name === voice);
 
@@ -54,31 +50,18 @@ function App() {
   };
 
   const resume = () => {
-    if (isAndroid) {
-      // native resume は機能しないため、現フレーズ先頭から再 speak する。
-      // 先に resume() を呼びエンジンが paused のまま固まる事故を解除しておく。
-      window.speechSynthesis.resume();
-      isPausingRef.current = false;
-      setIsPaused(false);
-      speak(currentPhraseIndexRef.current);
-      return;
-    }
-    if (!window.speechSynthesis.paused) {
+    setIsPaused(false);
+    if (isAndroid && currentPhraseIndex !== null) {
+      speak(currentPhraseIndex);
       return;
     }
     window.speechSynthesis.resume();
   };
 
   const pause = () => {
+    setIsPaused(true);
     if (isAndroid) {
-      // pause() は使えないので cancel() で止める。onend の自動前進は
-      // isPausingRef で抑止する。
-      isPausingRef.current = true;
-      setIsPaused(true);
       window.speechSynthesis.cancel();
-      return;
-    }
-    if (!window.speechSynthesis.speaking) {
       return;
     }
     window.speechSynthesis.pause();
@@ -86,8 +69,6 @@ function App() {
 
   const speak = (phraseIndex: number) => {
     const phrase = phrases[phraseIndex];
-    console.log("phrase:", phrase);
-    currentPhraseIndexRef.current = phraseIndex;
 
     const utterThis = new SpeechSynthesisUtterance(phrase.text);
     utterThis.voice = targetVoice ?? null;
@@ -96,27 +77,7 @@ function App() {
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterThis);
 
-    utterThis.onpause = (event) => {
-      setIsPaused(true);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
-
-    utterThis.onresume = (event) => {
-      setIsPaused(false);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech resumed at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
-
     utterThis.onend = () => {
-      // Android の擬似 pause による cancel() が発火させた onend は無視する。
-      if (isPausingRef.current) {
-        return;
-      }
       if (phraseIndex < phrases.length - 1) {
         setCurrentPhraseIndex(phraseIndex + 1);
         speak(phraseIndex + 1);
@@ -135,8 +96,6 @@ function App() {
       return;
     }
 
-    // Android では cancel() 後に native フラグが当てにならないため、
-    // React state を source of truth として分岐する。
     if (isSpeaking) {
       if (isPaused) {
         resume();
@@ -146,7 +105,6 @@ function App() {
       return;
     }
 
-    isPausingRef.current = false;
     setCurrentPhraseIndex(0);
     speak(0);
   };
@@ -155,7 +113,6 @@ function App() {
     if (!isSpeaking) {
       return;
     }
-    isPausingRef.current = false;
     setIsSpeaking(false);
     setIsPaused(false);
     setCurrentPhraseIndex(null);

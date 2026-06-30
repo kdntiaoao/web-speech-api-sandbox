@@ -12,6 +12,8 @@ import {
 import { Pause, Play, RotateCw } from "lucide-react";
 import Tiptap, { type Phrase } from "./components/Tiptap";
 
+const isAndroid = /Android/.test(navigator.userAgent);
+
 function App() {
   const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [rate, setRate] = useState(1);
@@ -43,14 +45,20 @@ function App() {
   };
 
   const resume = () => {
-    if (!window.speechSynthesis.paused) {
+    setIsPaused(false);
+    // Android では speechSynthesis.pause() が cancel() のように動作して resume() で復帰できない
+    // そのため、現在のフレーズで再度 speak() を呼び出す
+    if (isAndroid && currentPhraseIndex !== null) {
+      speak(currentPhraseIndex);
       return;
     }
     window.speechSynthesis.resume();
   };
 
   const pause = () => {
-    if (!window.speechSynthesis.speaking) {
+    setIsPaused(true);
+    if (isAndroid) {
+      window.speechSynthesis.cancel();
       return;
     }
     window.speechSynthesis.pause();
@@ -58,7 +66,6 @@ function App() {
 
   const speak = (phraseIndex: number) => {
     const phrase = phrases[phraseIndex];
-    console.log("phrase:", phrase);
 
     const utterThis = new SpeechSynthesisUtterance(phrase.text);
     utterThis.voice = targetVoice ?? null;
@@ -66,22 +73,6 @@ function App() {
     utterThis.rate = rate;
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterThis);
-
-    utterThis.onpause = (event) => {
-      setIsPaused(true);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
-
-    utterThis.onresume = (event) => {
-      setIsPaused(false);
-      const char = event.utterance.text.charAt(event.charIndex);
-      console.log(
-        `Speech resumed at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-      );
-    };
 
     utterThis.onend = () => {
       if (phraseIndex < phrases.length - 1) {
@@ -102,8 +93,12 @@ function App() {
       return;
     }
 
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.paused ? resume() : pause();
+    if (isSpeaking) {
+      if (isPaused) {
+        resume();
+      } else {
+        pause();
+      }
       return;
     }
 
@@ -112,9 +107,6 @@ function App() {
   };
 
   const cancel = () => {
-    if (!window.speechSynthesis.speaking) {
-      return;
-    }
     setIsSpeaking(false);
     setIsPaused(false);
     setCurrentPhraseIndex(null);
@@ -123,14 +115,19 @@ function App() {
 
   useEffect(() => {
     const populateVoices = () => {
-      const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
-      setVoices(localVoices);
-      const defaultVoice = localVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
+      const activeLangVoices = window.speechSynthesis
+        .getVoices()
+        .filter((v) => v.lang === "ja-JP" || v.lang === "ja_JP");
+      const selectableVoices =
+        activeLangVoices.length > 0 ? activeLangVoices : window.speechSynthesis.getVoices();
+      setVoices(selectableVoices);
+      const defaultVoice = selectableVoices.find((v) => v.default);
+      setVoice(defaultVoice?.name ?? selectableVoices[0]?.name ?? "");
     };
     populateVoices();
 
     window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
+    cancel();
 
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", populateVoices);

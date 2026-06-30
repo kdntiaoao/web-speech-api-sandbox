@@ -107,9 +107,6 @@ function App() {
   };
 
   const cancel = () => {
-    if (!isSpeaking) {
-      return;
-    }
     setIsSpeaking(false);
     setIsPaused(false);
     setCurrentPhraseIndex(null);

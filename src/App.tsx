@@ -12,11 +12,6 @@ import {
 import { Pause, Play, RotateCw } from "lucide-react";
 import Tiptap, { type Phrase } from "./components/Tiptap";
 
-// Android Chrome では speechSynthesis.pause()/resume() が正しく動かない
-// （pause() が実質 cancel() のように発話を破棄し、resume() で復帰できない）。
-// そのため Android では native pause/resume を使わず、cancel して現フレーズの
-// 先頭から再 speak する擬似 pause で代替する。
-// https://stackoverflow.com/questions/58953882/
 const isAndroid = /Android/.test(navigator.userAgent);
 
 function App() {
@@ -51,6 +46,8 @@ function App() {
 
   const resume = () => {
     setIsPaused(false);
+    // Android では speechSynthesis.pause() が cancel() のように動作して resume() で復帰できない
+    // そのため、現在のフレーズで再度 speak() を呼び出す
     if (isAndroid && currentPhraseIndex !== null) {
       speak(currentPhraseIndex);
       return;

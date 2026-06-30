@@ -118,10 +118,14 @@ function App() {
 
   useEffect(() => {
     const populateVoices = () => {
-      const localVoices = window.speechSynthesis.getVoices().filter((v) => v.lang === "ja-JP");
-      setVoices(localVoices);
-      const defaultVoice = localVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? localVoices[0]?.name ?? "");
+      const activeLangVoices = window.speechSynthesis
+        .getVoices()
+        .filter((v) => v.lang === "ja-JP" || v.lang === "ja_JP");
+      const selectableVoices =
+        activeLangVoices.length > 0 ? activeLangVoices : window.speechSynthesis.getVoices();
+      setVoices(selectableVoices);
+      const defaultVoice = selectableVoices.find((v) => v.default);
+      setVoice(defaultVoice?.name ?? selectableVoices[0]?.name ?? "");
     };
     populateVoices();
 

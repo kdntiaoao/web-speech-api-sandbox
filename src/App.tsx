@@ -127,13 +127,10 @@ function App() {
     populateVoices();
 
     window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
-    window.addEventListener("load", cancel);
-    window.addEventListener("beforeunload", cancel);
+    cancel();
 
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", populateVoices);
-      window.removeEventListener("load", cancel);
-      window.removeEventListener("beforeunload", cancel);
     };
   }, []);
 

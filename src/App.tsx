@@ -121,8 +121,14 @@ function App() {
       const selectableVoices =
         activeLangVoices.length > 0 ? activeLangVoices : window.speechSynthesis.getVoices();
       setVoices(selectableVoices);
-      const defaultVoice = selectableVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? selectableVoices[0]?.name ?? "");
+      setVoice((prevVoice) => {
+        // 選択済みの voice が新しい一覧にも存在する場合は選択を維持する
+        if (prevVoice && selectableVoices.some((v) => v.name === prevVoice)) {
+          return prevVoice;
+        }
+        const defaultVoice = selectableVoices.find((v) => v.default);
+        return defaultVoice?.name ?? selectableVoices[0]?.name ?? "";
+      });
     };
     populateVoices();
 

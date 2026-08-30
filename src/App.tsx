@@ -122,7 +122,13 @@ function App() {
         activeLangVoices.length > 0 ? activeLangVoices : window.speechSynthesis.getVoices();
       setVoices(selectableVoices);
       const defaultVoice = selectableVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? selectableVoices[0]?.name ?? "");
+      setVoice((preVoice) => {
+        // 選択済みの voice が存在する場合は選択を維持
+        if (preVoice && selectableVoices.some((v) => v.name === preVoice)) {
+          return preVoice;
+        }
+        return defaultVoice?.name ?? selectableVoices[0]?.name ?? "";
+      });
     };
     populateVoices();
 

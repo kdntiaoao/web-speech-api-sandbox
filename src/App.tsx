@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Pause, Play, RotateCw } from "lucide-react";
-import Tiptap, { type Phrase } from "./components/tiptap/Tiptap";
+import Tiptap from "./components/tiptap/Tiptap";
+import type { Phrase } from "./components/tiptap/utils";
 
 const isAndroid = /Android/.test(navigator.userAgent);
 

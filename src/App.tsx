@@ -12,6 +12,7 @@ import {
 import { Pause, Play, RotateCw } from "lucide-react";
 import Tiptap from "./components/tiptap/Tiptap";
 import type { Phrase } from "./components/tiptap/utils";
+import { replacePronunciations } from "./lib/replace-pronunciations";
 
 const isAndroid = /Android/.test(navigator.userAgent);
 
@@ -66,9 +67,9 @@ function App() {
   };
 
   const speak = (phraseIndex: number) => {
-    const phrase = phrases[phraseIndex];
+    const phrase = replacePronunciations(phrases[phraseIndex].text);
 
-    const utterThis = new SpeechSynthesisUtterance(phrase.text);
+    const utterThis = new SpeechSynthesisUtterance(phrase);
     utterThis.voice = targetVoice ?? null;
     utterThis.pitch = pitch;
     utterThis.rate = rate;

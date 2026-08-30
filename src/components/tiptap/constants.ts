@@ -29,3 +29,22 @@ display: none;
 — お母さんより
 </blockquote>
 `;
+
+/** 英単語と読み方の対応表 */
+export const PRONUNCIATIONS_MAP = {
+  markdown: "マークダウン",
+  chatgpt: "チャットジーピーティー",
+  openai: "オープンエーアイ",
+  vite: "ヴィート",
+  aws: "エーダブリュエス",
+  cli: "シーエルアイ",
+  ec2: "イーシーツー",
+  iam: "アイエーエム",
+  npm: "エヌピーエム",
+  sql: "エスキューエル",
+  ssh: "エスエスエイチ",
+  vpc: "ブイピーシー",
+  ai: "エーアイ",
+  ci: "シーアイ",
+  s3: "エススリー",
+} as const satisfies Record<string, string>;

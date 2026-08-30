@@ -6,7 +6,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
  */
 export type Phrase = { text: string; from: number; to: number };
 
-const SPLIT_CHARS = "、。．？！\n";
+const SPLIT_CHARS = "、。？！\n";
 
 /**
  * ProseMirror ドキュメントを走査し、表示テキストを句読点とブロック境界で
@@ -16,11 +16,12 @@ export const computePhrases = (doc: ProseMirrorNode): Phrase[] => {
   const phrases: Phrase[] = [];
   let current: Phrase | null = null;
 
-  // 組み立て中のフレーズを吐き出して、current を空にする (空・空白のみは捨てる)
+  /** 完成したフレーズを phrases に追加する */
   const flush = () => {
     if (current && current.text.trim() !== "") {
       phrases.push(current);
     }
+    // 新しいフレーズを開始するために current をリセット
     current = null;
   };
 

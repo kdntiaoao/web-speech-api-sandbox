@@ -1,9 +1,10 @@
-export const initialContent = `
+/** Tiptap の初期コンテンツ */
+export const INITIAL_CONTENT = `
 <h2>
 こんにちは！
 </h2>
 <p>
-これは <strong>Tiptap</strong> の<em>基本構造</em>を示したサンプルです。もちろん、**テキストエディタ**に期待されるような、あらゆる基本的なテキストスタイルに対応しています。ですが、こちらのリスト機能もぜひご覧ください：
+これは <strong>Tiptap</strong> の<em>基本構造</em>を示したサンプルです。もちろん、**テキストエディタ**に期待されるような、Markdown に対応しています。ですが、こちらのリスト機能もぜひご覧ください：
 </p>
 <ul>
 <li>

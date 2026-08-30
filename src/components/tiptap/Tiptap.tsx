@@ -6,7 +6,7 @@ import { useEffect, useRef, type FC } from "react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { highlightPluginKey, MarkdownPaste, PlaybackHighlight } from "./extensions";
-import { initialContent } from "./initial-content";
+import { INITIAL_CONTENT } from "./constants";
 import { computePhrases, type Phrase } from "./utils";
 
 type Props = {
@@ -50,7 +50,7 @@ const Tiptap: FC<Props> = ({ onChange, currentPhraseIndex, editable }) => {
         ),
       },
     },
-    content: initialContent,
+    content: INITIAL_CONTENT,
     onUpdate: ({ editor: currentEditor }) => {
       emitPhrases(currentEditor.state.doc);
     },

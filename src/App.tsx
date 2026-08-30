@@ -10,7 +10,9 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { Pause, Play, RotateCw } from "lucide-react";
-import Tiptap, { type Phrase } from "./components/Tiptap";
+import Tiptap from "./components/tiptap/Tiptap";
+import type { Phrase } from "./components/tiptap/utils";
+import { replacePronunciations } from "./lib/replace-pronunciations";
 
 const isAndroid = /Android/.test(navigator.userAgent);
 
@@ -65,9 +67,9 @@ function App() {
   };
 
   const speak = (phraseIndex: number) => {
-    const phrase = phrases[phraseIndex];
+    const phrase = replacePronunciations(phrases[phraseIndex].text);
 
-    const utterThis = new SpeechSynthesisUtterance(phrase.text);
+    const utterThis = new SpeechSynthesisUtterance(phrase);
     utterThis.voice = targetVoice ?? null;
     utterThis.pitch = pitch;
     utterThis.rate = rate;
@@ -122,7 +124,13 @@ function App() {
         activeLangVoices.length > 0 ? activeLangVoices : window.speechSynthesis.getVoices();
       setVoices(selectableVoices);
       const defaultVoice = selectableVoices.find((v) => v.default);
-      setVoice(defaultVoice?.name ?? selectableVoices[0]?.name ?? "");
+      setVoice((preVoice) => {
+        // 選択済みの voice が存在する場合は選択を維持
+        if (preVoice && selectableVoices.some((v) => v.name === preVoice)) {
+          return preVoice;
+        }
+        return defaultVoice?.name ?? selectableVoices[0]?.name ?? "";
+      });
     };
     populateVoices();
 
@@ -199,7 +207,7 @@ function App() {
 
                 <Field>
                   <FieldLabel>Voice</FieldLabel>
-                  <Select value={voice} onValueChange={handleVoiceChange}>
+                  <Select value={voice} onValueChange={handleVoiceChange} disabled={isSpeaking}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a voice" />
                     </SelectTrigger>

@@ -205,7 +205,7 @@ function App() {
 
                 <Field>
                   <FieldLabel>Voice</FieldLabel>
-                  <Select value={voice} onValueChange={handleVoiceChange}>
+                  <Select value={voice} onValueChange={handleVoiceChange} disabled={isSpeaking}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a voice" />
                     </SelectTrigger>
